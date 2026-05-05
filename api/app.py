@@ -6,7 +6,11 @@ import os
 app = Flask(__name__)
 
 # --- MOBILE-FRIENDLY CORS ---
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {
+    "origins": "*", 
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}})
 
 # Vercel provides 'POSTGRES_URL'. 
 # Note: On the Vercel dashboard, you MUST connect the Storage to your project.
