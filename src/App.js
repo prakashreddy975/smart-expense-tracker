@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-const API = "http://127.0.0.1:5001/api";
+const API = "/api";
 
 function App() {
   // --- DATA STATES ---

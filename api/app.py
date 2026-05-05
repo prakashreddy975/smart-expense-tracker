@@ -4,11 +4,16 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
-CORS(app)
+
+# --- MOBILE-FRIENDLY CORS ---
+CORS(app, resources={r"/api/*": {
+    "origins": "*",
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type"]
+}})
 
 # --- DATABASE CONFIG ---
-# Vercel provides the POSTGRES_URL environment variable when you connect Neon.
-# Locally, it falls back to a local sqlite file so you can still test offline.
+# Vercel provides the POSTGRES_URL. Locally, it uses a sqlite file.
 DATABASE_URL = os.getenv('POSTGRES_URL')
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -41,12 +46,11 @@ class Bill(db.Model):
     paid_date = db.Column(db.String(20))
     from_bank = db.Column(db.String(100))
 
-# Initialize the database and create tables automatically
+# Initialize Tables
 with app.app_context():
     db.create_all()
 
-# --- ROUTES ---
-
+# --- EXPENSE & ANALYTICS ROUTES ---
 @app.route('/api/expenses', methods=['GET', 'POST'])
 def handle_expenses():
     if request.method == 'POST':
@@ -84,6 +88,16 @@ def update_expense(id):
     db.session.commit()
     return jsonify({"status": "updated"})
 
+@app.route('/api/analytics', methods=['GET'])
+def get_analytics():
+    expenses = Expense.query.all()
+    total = sum(e.amount for e in expenses)
+    cats = {}
+    for e in expenses:
+        cats[e.category] = cats.get(e.category, 0) + e.amount
+    return jsonify({"total": total, "categories": cats})
+
+# --- BANK ROUTES ---
 @app.route('/api/banks', methods=['GET', 'POST'])
 def handle_banks():
     if request.method == 'POST':
@@ -108,6 +122,7 @@ def update_bank(id):
     db.session.commit()
     return jsonify({"status": "updated"})
 
+# --- BILL ROUTES ---
 @app.route('/api/bills', methods=['GET', 'POST'])
 def handle_bills():
     if request.method == 'POST':
@@ -146,15 +161,6 @@ def update_bill(id):
         bill.from_bank = data.get('from_bank')
     db.session.commit()
     return jsonify({"status": "updated"})
-
-@app.route('/api/analytics', methods=['GET'])
-def get_analytics():
-    expenses = Expense.query.all()
-    total = sum(e.amount for e in expenses)
-    cats = {}
-    for e in expenses:
-        cats[e.category] = cats.get(e.category, 0) + e.amount
-    return jsonify({"total": total, "categories": cats})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
