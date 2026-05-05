@@ -13,12 +13,19 @@ CORS(app, resources={r"/api/*": {
 }})
 
 # --- DATABASE CONFIG ---
-# Vercel provides the POSTGRES_URL. Locally, it uses a sqlite file.
 DATABASE_URL = os.getenv('POSTGRES_URL')
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///local.db'
+# 2. Check if we are actually connected to the cloud
+if DATABASE_URL:
+    # Fix the prefix for SQLAlchemy compatibility
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+else:
+    # If no cloud DB is found, it uses this (which resets on Vercel!)
+    print("WARNING: Using local temporary database. Data will not persist on Vercel.")
+    DATABASE_URL = 'sqlite:///local.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
