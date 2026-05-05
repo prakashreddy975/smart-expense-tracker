@@ -12,7 +12,13 @@
       }
     ],
     "rewrites": [
-      { "src": "/api/(.*)", "dest": "api/app.py" },
-      { "src": "/(.*)", "dest": "/index.html" }
+      {
+        "source": "/api/(.*)",
+        "destination": "api/app.py"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
     ]
   }
