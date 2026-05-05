@@ -6,23 +6,20 @@ import os
 app = Flask(__name__)
 
 # --- MOBILE-FRIENDLY CORS ---
-CORS(app, resources={r"/api/*": {
-    "origins": "*",
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type"]
-}})
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# --- DATABASE CONFIG ---
+# Vercel provides 'POSTGRES_URL'. 
+# Note: On the Vercel dashboard, you MUST connect the Storage to your project.
 DATABASE_URL = os.getenv('POSTGRES_URL')
 
-# 2. Check if we are actually connected to the cloud
 if DATABASE_URL:
-    # Fix the prefix for SQLAlchemy compatibility
+    # SQL Alchemy requires 'postgresql://' instead of 'postgres://'
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    print("LOG: Connected to Cloud Postgres")
 else:
-    # If no cloud DB is found, it uses this (which resets on Vercel!)
-    print("WARNING: Using local temporary database. Data will not persist on Vercel.")
+    # If this prints in your Vercel logs, your storage isn't connected!
+    print("LOG: Cloud DB not found, using local temporary storage")
     DATABASE_URL = 'sqlite:///local.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
